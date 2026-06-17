@@ -1,0 +1,7 @@
+package com.tutor.enums;
+
+public enum MaterialStatus {
+
+	PDF, VIDEO, PPT, DOC, DOCX, IMAGE, AUDIO, LINK, ZIP, OTHER,
+	UPLOADED, UNDER_REVIEW, APPROVED, REJECTED, ARCHIVED, PENDING
+}

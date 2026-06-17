@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Super Admin Notifications</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      padding: 20px;
+    }
+    h2 {
+      margin-bottom: 10px;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      background: #fff;
+      margin-bottom: 10px;
+      padding: 12px;
+      border-left: 5px solid #4caf50;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .time {
+      font-size: 12px;
+      color: gray;
+    }
+  </style>
+</head>
+<body>
+
+<h2>🔔 Super Admin Notifications</h2>
+<ul id="notifications"></ul>
+
+<script>
+  const API_BASE = "http://localhost:8099";
+  const list = document.getElementById("notifications");
+
+  // Load existing notifications
+  function loadNotifications() {
+    fetch(API_BASE + "/api/notifications/super-admin")
+      .then(res => res.json())
+      .then(data => {
+        list.innerHTML = "";
+        data.forEach(n => addNotification(n.message, n.createdAt));
+      })
+      .catch(err => console.error("Failed to load notifications", err));
+  }
+
+  function addNotification(message, time) {
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <div>${message}</div>
+      <div class="time">${time || new Date().toLocaleString()}</div>
+    `;
+    list.prepend(li);
+  }
+
+  // WebSocket connection
+  function connectWebSocket() {
+    console.log("Opening WebSocket...");
+    const socket = new SockJS(API_BASE + "/ws");
+    const stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, () => {
+      console.log("WebSocket connected");
+
+      stompClient.subscribe("/topic/notifications", msg => {
+        const data = JSON.parse(msg.body);
+        addNotification(data.message, data.createdAt);
+      });
+    }, error => {
+      console.error("WebSocket error", error);
+    });
+  }
+
+  loadNotifications();
+  connectWebSocket();
+</script>
+
+</body>
+</html>
